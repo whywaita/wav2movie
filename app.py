@@ -12,12 +12,10 @@ def make_image(screen, bgcolor, filename):
     img.save(filename)
 
 
-def make_movie():
+def make_movie(screen, length):
     """
-    WIP: 生成した画像を組み合わせて動画化する
+    生成した画像を組み合わせて動画化する
     """
-
-    return
 
 
 def gen_random_colorcode():
@@ -64,18 +62,20 @@ def associate_music_colorcode(music):
 
 if __name__ == '__main__':
     # wav file読み込み
-    wav_file = './ihdd.wav'
-    wave = read(wav_file)
+    wav_file = './mao.wav'
+    fs, data = read(wav_file)
     frequency = 44100
     # 1次元に
-    scale = wave[1][:frequency, 0]
+    scale = data[:, 0]
+    print(len(scale))
 
-    screen = (1920, 1080)
+    # screen = (1920, 1080)
+    screen = (2, 2)
 
     mc = associate_music_colorcode(scale)
 
     count = 0
     for i in scale:
-        print(mc[i])
-        make_image(screen, mc[i], "images/s" + str(count) + ".png")
+        print("c : " + str(count))
+        make_image(screen, mc[i], "images/s{0:06d}.png".format(count))
         count += 1

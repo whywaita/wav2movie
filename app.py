@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import random
+import subprocess
 from scipy.io.wavfile import read
 from PIL import Image
+import sys
 
 
 def make_image(screen, bgcolor, filename):
@@ -12,10 +14,15 @@ def make_image(screen, bgcolor, filename):
     img.save(filename)
 
 
-def make_movie(screen, length):
-    """
-    生成した画像を組み合わせて動画化する
-    """
+def make_movie():
+    cmd = ('cd images ;'
+           'ffmpeg -y -r 48000 -i img_%06d.png -i ../%s'
+           '-acodec aac -strict experimental -ab 320k -ac 2 -ar 48000'
+           '-vcodec libx264 -pix_fmt yuv420p -r 60'
+           '../%s -shortest'
+           % (sys.argv[1], "out.mp4")
+           )
+    subprocess.call(cmd, shell=True)
 
 
 def gen_random_colorcode():
@@ -48,34 +55,40 @@ def associate_music_colorcode(music):
     対応付けは乱数でやる
     """
 
-    done = []
+    # done = []
     mc = {}
 
     for i in music:
         rand = gen_random_colorcode()
 
-        if not isExistInList(done, rand):
-            mc.update({i: rand})
+        # if not isExistInList(done, rand):
+        mc.update({i: rand})
 
     return mc
 
 
 if __name__ == '__main__':
     # wav file読み込み
-    wav_file = './mao.wav'
+    wav_file = sys.argv[1]
     fs, data = read(wav_file)
-    frequency = 44100
-    # 1次元に
-    scale = data[:, 0]
+    # 1次元に(右だけ)
+    scale = data[:, 0]  # フレーム全部
+    # scale = data[:fs, 0]
+    # scale = data[:120, 0]
+
     print(len(scale))
 
     # screen = (1920, 1080)
-    screen = (2, 2)
+    # screen = (640, 480)
+    screen = (160, 90)
+    # screen = (2, 2)
 
     mc = associate_music_colorcode(scale)
 
     count = 0
     for i in scale:
-        print("c : " + str(count))
-        make_image(screen, mc[i], "images/s{0:06d}.png".format(count))
+        print("c : " + str(count) + ":" + mc[i])
+        make_image(screen, mc[i], "images/img_{0:06d}.png".format(count))
         count += 1
+
+    make_movie()
